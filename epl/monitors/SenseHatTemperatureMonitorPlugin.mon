@@ -1,0 +1,67 @@
+/**
+ * A simple EPL application to call a python plugin to drive the RaspberryPi GPIO SenseHat.
+ *
+ * Copyright (c) 2018 John Heath
+ */
+ 
+event Temperature {
+	float reading; 
+}
+
+event Control {
+	integer adjustment;
+}
+
+monitor SenseHatTemperatureMonitor {
+	float threshold := 34.0;
+	boolean overridden := false;
+
+	import "SenseHatTemperatureMonitor" as sensehat;
+
+	action onload() {
+		monitor.subscribe("temperature_updates");
+
+		log "Subscribed to \"temperature_updates\"" at INFO;
+
+		on all Temperature() as t {
+			processReading(t);
+		}
+
+		on all Control() as c {
+			adjustParameters(c);
+		}
+
+		log "Thermostat threshold :" + threshold.toString() at INFO;
+		log "System override :" + overridden.toString() at INFO;
+
+	}
+
+	action adjustParameters( Control message ) {
+		if ( message.adjustment = 1 ) {
+			//up
+			threshold := threshold + 0.5;
+		}
+		if (message.adjustment = 2) {
+			//down
+			threshold  := threshold - 0.5;
+		}	
+		if (message.adjustment = 3) {
+			//left
+			overridden  := false; //use therm
+		}	
+		if (message.adjustment = 4) {
+			//right
+			overridden  := true; //always on
+		}	
+		log "Thermostat threshold :" + threshold.toString() at INFO;
+		log "System override :" + overridden.toString() at INFO;
+	}
+
+	
+	action processReading( Temperature temp ) {
+		log "reading : " + temp.toString() at INFO;
+		sensehat.setSystemStatus( (temp.reading > threshold or  overridden) );
+	}
+
+}
+
