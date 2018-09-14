@@ -4,24 +4,39 @@
  * Copyright (c) 2018 John Heath
  */
  
+ //The basic message of the system
 event Temperature {
 	float reading; 
 }
 
-event Control {
-	integer adjustment;
+//Events representing the controls being pressed 
+//controlType identifying the actual control 
+eevent Control {
+	integer controlType;
 }
 
+
+// Monitor controlling the "thermostat" and Pi display
 monitor SenseHatTemperatureMonitor {
+
+	//hard coded for simplicity these could be config and
+	//passed to the plugin on loading
 	float threshold := 34.0;
 	boolean overridden := false;
 
+	integer CTRL_UP := 1;
+	integer CTRL_DOWN := 2;
+	integer CTRL_LEFT := 3;
+	integer CTRL_RIGHT := 4;
+
+	// load the python plugin defined in the config
 	import "SenseHatTemperatureMonitor" as sensehat;
 
+	//setup 
 	action onload() {
-		monitor.subscribe("temperature_updates");
+		monitor.subscribe("monitor_messages");
 
-		log "Subscribed to \"temperature_updates\"" at INFO;
+		log "Subscribed to \"monitor_messages\"" at INFO;
 
 		on all Temperature() as t {
 			processReading(t);
@@ -31,35 +46,42 @@ monitor SenseHatTemperatureMonitor {
 			adjustParameters(c);
 		}
 
+		//Display the status - initial state
 		log "Thermostat threshold :" + threshold.toString() at INFO;
 		log "System override :" + overridden.toString() at INFO;
 
 	}
 
+	//respond to joystick, an alternate way would have been to define 
+	//messages and handlers for each control type and have an action for 
+	//each  
 	action adjustParameters( Control message ) {
-		if ( message.adjustment = 1 ) {
+		if ( message.controlType = CTRL_UP ) {
 			//up
 			threshold := threshold + 0.5;
 		}
-		if (message.adjustment = 2) {
+		if (message.controlType = CTRL_DOWN) {
 			//down
 			threshold  := threshold - 0.5;
 		}	
-		if (message.adjustment = 3) {
+		if (message.controlType = CTRL_LEFT) {
 			//left
 			overridden  := false; //use therm
 		}	
-		if (message.adjustment = 4) {
+		if (message.controlType = CTRL_RIGHT) {
 			//right
 			overridden  := true; //always on
 		}	
+
+		//Display the status in the correlator output to indicate we got the message
 		log "Thermostat threshold :" + threshold.toString() at INFO;
 		log "System override :" + overridden.toString() at INFO;
 	}
 
-	
+	//Control the system 
 	action processReading( Temperature temp ) {
 		log "reading : " + temp.toString() at INFO;
+		//Here we could call the Hive API to actually turn the system on or off
 		sensehat.setSystemStatus( (temp.reading > threshold or  overridden) );
 	}
 

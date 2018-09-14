@@ -77,26 +77,26 @@ def doWaitCursor(repeat):
 def pushed_up(event):
     if event.action == ACTION_RELEASED:
         joyevt = Event(
-            'Control', {"adjustment": 1})
-        Correlator.sendTo("temperature_updates", joyevt)
+            'Control', {"controlType": 1})
+        Correlator.sendTo("monitor_messages", joyevt)
 
 def pushed_down(event):
     if event.action == ACTION_RELEASED:
         joyevt = Event(
-            'Control', {"adjustment": 2})
-        Correlator.sendTo("temperature_updates", joyevt)
+            'Control', {"controlType": 2})
+        Correlator.sendTo("monitor_messages", joyevt)
 
 def pushed_left(event):
     if event.action == ACTION_RELEASED:
         joyevt = Event(
-            'Control', {"adjustment": 3})
-        Correlator.sendTo("temperature_updates", joyevt)
+            'Control', {"controlType": 3})
+        Correlator.sendTo("monitor_messages", joyevt)
 
 def pushed_right(event):
     if event.action == ACTION_RELEASED:
         joyevt = Event(
-            'Control', {"adjustment": 4})
-        Correlator.sendTo("temperature_updates", joyevt)
+            'Control', {"controlType": 4})
+        Correlator.sendTo("monitor_messages", joyevt)
 
 def pushed_in(event):
     if event.action == ACTION_RELEASED:
@@ -135,7 +135,7 @@ def poll(plugin, interval):
             doWaitCursor(8) #2 secs
             plugin.getLogger().info("TemperatureMonitor Thread triggers every " + str(interval) + " secs")
             evt = Event('Temperature', {"reading": sense.temp})
-            Correlator.sendTo("temperature_updates", evt)
+            Correlator.sendTo("monitor_messages", evt)
             showTemp()
             doWaitCursor(8) #2 secs
             showSystemStatus(plugin)
