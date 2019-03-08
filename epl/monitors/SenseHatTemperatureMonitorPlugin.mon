@@ -11,7 +11,7 @@ event Temperature {
 
 //Events representing the controls being pressed 
 //controlType identifying the actual control 
-eevent Control {
+event Control {
 	integer controlType;
 }
 
